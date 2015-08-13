@@ -8,7 +8,10 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <fcntl.h>
-
+#include <dirent.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <stdlib.h>
 
 #define GET_ARRAY_LEN(array,len){len = (sizeof(array) / sizeof(array[0]));}
 
@@ -41,16 +44,55 @@ int test2() {
 	return 0;
 }
 
-void test3(){
-	open("testFile",O_CREAT,S_IRUSR|S_IXOTH);
+void test3() {
+	open("testFile", O_CREAT, S_IRUSR | S_IXOTH);
 }
 
+/**
+ * Test dir filesystem on Linux&MacOS
+ */
+void test4() {
+	char buf[255];
+	char* pwd = getcwd(buf, 255);
+	printf("Your are in the %s\n", pwd);
+	const char* cwd = "/usr";
+	chdir(cwd);
+	pwd = getcwd(buf, 255);
+	printf("Your are in the %s\n", pwd);
+}
 
-void test4(){
+/**
+ * Test print dir
+ */
+void test5(char *dir, int depth) {
+	DIR *dp;
+	struct dirent *entry;
+	struct stat statbuf;
 
+	if ((dp = opendir(dir)) == NULL) {
+		fprintf(stderr, "cannot open directory: s%\n", dir);
+		return;
+	}
+
+	chdir(dir);
+	while((entry=readdir(dp))!=NULL){
+		lstat(entry->d_name,&statbuf);
+		if(S_ISDIR(statbuf.st_mode)){
+			//
+			if(strcmp(".",entry->d_name)==0||strcmp("..",entry->d_name)==0){
+				continue;
+			}
+			printf("%*s%s/\n",depth,"",entry->d_name);
+			test5(entry->d_name,depth+4);
+		}else{
+			printf("%*s%s\n",depth,"",entry->d_name);
+		}
+	}
+	chdir("..");
+	closedir(dp);
 }
 
 int main() {
-	test3();
+	test5("/Users/jon/work/testLC",0);
 	return 0;
 }
