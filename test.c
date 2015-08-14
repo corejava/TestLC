@@ -26,6 +26,7 @@ int test1() {
 
 int test2() {
 	char buffer[128];
+
 	int nread;
 
 	nread = read(0, buffer, 128);
